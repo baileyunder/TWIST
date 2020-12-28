@@ -1,8 +1,28 @@
+// Init
 const express = require('express');
-const path = require('path');
-
-// Init Web App
 const app = express();
+const path = require('path');
+const bodyparser = require('body-parser');
+const http = require('http').Server(app);
+
+// Set up mongodb
+const MongoClient = require('mongodb').MongoClient;
+const uri = 'mongodb+srv://admin:pvssw0rd@twist-cluster.8ppib.mongodb.net/TWIST?retryWrites=true&w=majority'; //Database String
+
+const client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
+client.connect(err => {
+  const registrants = client.db("TWIST").collection("registrants");
+  const sessions = client.db("TWIST").collection("sessions");
+  client.close();
+});
+
+//Middlware Setup
+app.use(bodyparser.json());
+app.use(bodyparser.urlencoded({ extended: true}));
 
 // View Engine
 app.set('views', path.join(__dirname, 'views'));
@@ -11,8 +31,7 @@ app.set('view engine', 'pug');
 // Set assets folder
 app.use(express.static(__dirname + '/assets'));
 
-// Routes - Note that several routes are subject to change as they should not be accessible until certain actions are performed
-// Homepage Route
+// Routes
 app.get('/', (req, res) => {
     res.render('index');
 });
@@ -22,7 +41,7 @@ app.get('/register', (req, res) => {
     res.render('register');
 });
 
-// Successful Registration Route - This route will need to be made only accessible after registration form is filled out
+// Successful Registration Route
 app.get('/success', (req, res) => {
     res.render('success');
 });
@@ -32,6 +51,7 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
+//App Routes below require tokens
 // This route is for testing purposes only and should be removed before production. The admin page should only be accessible through a successful login.
 app.get('/admin', (req, res) => {
     res.render('admin');
@@ -45,26 +65,3 @@ app.get('/edit', (req, res) => {
 // Open port 3000
 app.listen(process.env.PORT || 3000, 
 	() => console.log("Server is running..."));
-
-//This should be a template we can use for all databases we need in the future
-//------------------------------------------------------------------------------------
-
-const MongoClient = require('mongodb').MongoClient;
-const uri = 'mongodb+srv://TWIST:TWIST@cluster0.jfxqx.mongodb.net/TWIST?retryWrites=true&w=majority'; //Database String
-
-const client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
-
-client.connect(err => {
-  const collection = client.db("TWIST").collection("collection");
-  
-  client.close();
-});
-const bodyparser = require('body-parser');
-const http = require('http').Server(app);
-
-//Middlware Setup
-app.use(bodyparser.json());
-app.use(bodyparser.urlencoded({ extended: true}));
